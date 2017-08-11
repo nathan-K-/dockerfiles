@@ -1,3 +1,6 @@
+build:
+	docker-compose build
+
 up:
 	docker stack deploy -c docker-compose.yml mosquitto
 
