@@ -1,0 +1,62 @@
+version: "3"
+services:
+  haproxy:
+    build:
+      context: ./haproxy
+    image: haproxy-mqtt
+    ports: 
+      - 1883:1883
+    networks:
+      - mosk_net
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+  bridge:
+    image: eclipse-mosquitto:1.4.12
+    ports: 
+      - 1883
+    networks:
+      - mosk_net
+    hostname: mosk_bridge
+
+  brokerA:
+    image: eclipse-mosquitto:1.4.12
+    ports: 
+      - 1883
+    networks:
+      - mosk_net
+    #hostname: mosk_a
+    volumes:
+      - ./mosquittoConfA/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    depends_on: 
+      - haproxy
+      - bridge
+
+  brokerB:
+    image: eclipse-mosquitto:1.4.12
+    ports: 
+      - 1883
+    networks:
+      - mosk_net
+    #hostname: mosk_b
+    volumes:
+      - ./mosquittoConfB/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    depends_on: 
+      - haproxy
+      - bridge
+
+  brokerC:
+    image: eclipse-mosquitto:1.4.12
+    ports: 
+      - 1883
+    networks:
+      - mosk_net
+    #hostname: mosk_c
+    volumes:
+      - ./mosquittoConfC/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    depends_on: 
+      - haproxy
+      - bridge
+
+networks:
+  mosk_net:

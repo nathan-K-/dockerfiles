@@ -1,0 +1,55 @@
+version: "3"
+services:
+  redis:
+    image: redis:4.0.1-alpine
+    ports:
+      - '127.0.0.1:6379:6379'
+    networks:
+      - mosca-net
+    hostname: redis
+    #domainname: mosca.poc
+    deploy:
+      #replicas: 2
+      #update_config:
+      #  parallelism: 2
+      #  delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  mosca:
+    build:
+      context: ./mosca
+    image: mosca-mqtt
+    ports: 
+      - 1883:1883
+    networks:
+      - mosca-net
+    hostname: mosca
+    #domainname: mosca.poc
+    depends_on: 
+      - redis
+
+  #haproxy:
+  #  build:
+  #    context: ./haproxy
+  #  image: haproxy-mqtt
+  #  ports:
+  #    - '127.0.0.1:1883:1883'
+  #  networks:
+  #    - mosca-net
+  #  volumes:
+  #    - ~/Dev/MQTT/Clustering/Mosca-POC-swarm/haproxy/:/usr/local/etc/haproxy/:ro
+  #  deploy:
+      #replicas: 2
+      #update_config:
+      #  parallelism: 2
+      #  delay: 10s
+  #    restart_policy:
+  #      condition: on-failure
+  #  depends_on: 
+  #    - mosca
+  #    - redis
+
+
+networks:
+  mosca-net:
