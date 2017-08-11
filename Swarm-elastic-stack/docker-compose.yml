@@ -1,0 +1,100 @@
+---
+version: '3'
+services:
+  # The environment variable "TAG" is used throughout this file to
+  # specify the version of the images to run. The default is set in the
+  # '.env' file in this folder. It can be overridden with any normal
+  # technique for setting environment variables, for example:
+  #
+  #   TAG=5.3.0 docker-compose up
+  #
+  # REF: https://docs.docker.com/compose/compose-file/#variable-substitution
+  #
+  # Also to be sure to set ELASTIC_VERSION variable. For released versions,
+  # ${TAG} and ${ELASTIC_VERSION} will be identical, but for pre-release
+  # versions, ${TAG} might contain an extra build identifier, like
+  # "5.4.0-a80c820b", so a full invocation might look like:
+  #
+  #   ELASTIC_VERSION=5.4.0 TAG=5.4.0-a80c820b docker-compose up
+  #
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${TAG}
+    volumes:
+      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - esdata:/usr/share/elasticsearch/data/
+    ports: ['127.0.0.1:9200:9200']
+    networks: ['elasticstack']
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${TAG}
+    ports: ['127.0.0.1:5601:5601']
+    networks: ['elasticstack']
+    depends_on: ['elasticsearch']
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${TAG}
+   # # Provide a simple pipeline configuration for Logstash with a bind-mounted file.
+    volumes:
+      - ./config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks: ['elasticstack']
+    depends_on: ['elasticsearch']
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${TAG}
+    # If the host system has logs at "/var/log", mount them at "/mnt/log"
+    # inside the container, where Filebeat can find them.
+    # volumes: ['/var/log:/mnt/log:ro']
+    networks: ['elasticstack']
+    depends_on: ['elasticsearch']
+
+  heartbeat:
+    image: docker.elastic.co/beats/heartbeat:${TAG}
+    networks: ['elasticstack']
+    depends_on: ['elasticsearch']
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:${TAG}
+    # The commented sections below enable Metricbeat to monitor the Docker host,
+    # rather than the Metricbeat container. It's problematic with Docker for
+    # Windows, however, since "/proc", "/sys" etc. don't exist on Windows.
+    # The same likely applies to OSX (needs testing).
+    # volumes:
+    #   - /proc:/hostfs/proc:ro
+    #   - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+    #   - /:/hostfs:ro
+    command: metricbeat -e # -system.hostfs=/hostfs
+    networks: ['elasticstack']
+    depends_on: ['elasticsearch']
+
+  packetbeat:
+    image: docker.elastic.co/beats/packetbeat:${TAG}
+    # Packetbeat needs some elevated privileges to capture network traffic.
+    # We'll grant them with POSIX capabilities.
+    cap_add: ['NET_RAW', 'NET_ADMIN']
+    # Use "host mode" networking to allow Packetbeat to capture traffic from
+    # the real network interface on the host, rather than being isolated to the
+    # container's virtual interface.
+    network_mode: host
+    # Since we did that, Packetbeat is not part of the "elasticstack" Docker network
+    # that the other containers are connected to, and thus can't resolve the
+    # hostname "elasticsearch". Instead, we'll tell it to find Elasticsearch
+    # on "localhost", which is the Docker host machine in this context.
+    command: packetbeat -v -e -E output.elasticsearch.hosts='["localhost:9200"]'
+    depends_on: ['elasticsearch']
+
+  # Run a short-lived container to set up Kibana index patterns and dashboards.
+  configure_kibana:
+    # Any Beats image will suffice. We'll use Metricbeat.
+    image: docker.elastic.co/beats/metricbeat:${TAG}
+    volumes: ['./scripts/configure-kibana.sh:/usr/local/bin/configure-kibana.sh:ro']
+    # The script may have CR/LF linefeeds if using Docker for Windows, so make
+    # sure that they don't confuse Bash.
+    command: ['/bin/bash', '-c', 'cat /usr/local/bin/configure-kibana.sh | tr -d "\r" | bash']
+    environment: ['ELASTIC_VERSION=${ELASTIC_VERSION}']
+    networks: ['elasticstack']
+    depends_on: ['kibana']
+
+networks: {elasticstack: {}}
+
+volumes:
+  esdata: {}
