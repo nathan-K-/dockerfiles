@@ -10,3 +10,5 @@ You will find a specific config file in ```mosquittoConfX```, this is made for 3
 With every config file / images ready, you can do:
 ```make up``` to start it, and
 ```make down``` to stop it
+
+The docker routing mesh can do the work of a load balancer, but I still integrate a HAProxy for this POC. (feel free to remove it if you want)
