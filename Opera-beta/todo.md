@@ -8,7 +8,8 @@ Have a running, out-of-the-box, opera beta (with GUI, of course) running in one 
 - Python 2 or 3 (sys, subprocess, json) -> ```subprocess.call('ssh nathan@127.0.0.1', shell=True)```
 - (maybe Perl, to test it ?)
 - Docker, to run Opera
-- ssh -X  -> to share X server without mounting the X socket in the container, -> add my ssh keys in the build / after, or ssh-copy-id (passwords = bad)
+- ```ssh -X```  -> to share X server without mounting the X socket in the container, -> add my ssh keys in the build / after, or ssh-copy-id (passwords = bad)
+- x2go instead of ```ssh -X``` maybe
 
 ## Potential issues 
 - Persistent storage ? (history, bookmarks, etc... )
