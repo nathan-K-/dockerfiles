@@ -91,6 +91,7 @@ RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android
 
 
 # Android SDK Build-tools, revision 26.0.1
+RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android SDK Build-tools, revision 23.0.1" | awk '{ print $1 }' | sed 's/.$//')
 RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android SDK Build-tools, revision 26.0.1" | awk '{ print $1 }' | sed 's/.$//')
 
 # SDK Platform Android 6.0, API 23, revision 3
