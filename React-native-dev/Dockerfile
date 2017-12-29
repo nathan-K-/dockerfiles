@@ -86,13 +86,13 @@ RUN curl --silent https://dl.google.com/android/repository/tools_r$ANDROID_VERSI
 
 # Add android SDK tools
 
-# Android SDK Platform-tools, revision 26 (25.0.2 and 23.0.1 availables)
-RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android SDK Platform-tools, revision 26" | awk '{ print $1 }' | sed 's/.$//')
+# Android SDK Platform-tools, latest
+RUN echo "y" | android update sdk -u -a -t 2
 
 
 # Android SDK Build-tools, revision 26.0.1
-RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android SDK Build-tools, revision 23.0.1" | awk '{ print $1 }' | sed 's/.$//')
-RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android SDK Build-tools, revision 26.0.1" | awk '{ print $1 }' | sed 's/.$//')
+RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android SDK Build-tools, revision 27.0.3" | awk '{ print $1 }' | sed 's/.$//')
+#RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "Android SDK Build-tools, revision 26.0.1" | awk '{ print $1 }' | sed 's/.$//')
 
 # SDK Platform Android 6.0, API 23, revision 3
 RUN echo "y" | android update sdk -u -a -t $(android list sdk -a | grep "SDK Platform Android 6.0, API 23" | awk '{ print $1 }' | sed 's/.$//')
